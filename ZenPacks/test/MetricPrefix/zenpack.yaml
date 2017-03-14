@@ -1,1 +1,274 @@
 name: ZenPacks.test.MetricPrefix
+
+
+classes:
+  MetricPrefixDevice:
+    base: [zenpacklib.Device]
+    monitoring_templates:
+      - Basis
+      - Calculated
+      - AggregatedDevice
+
+  BasePrefixComponent:
+    base: [zenpacklib.Component]
+    monitoring_templates:
+      - Basis
+      - Calculated
+
+  BasePrefixAggregate:
+    base: [zenpacklib.Component]
+    monitoring_templates:
+      - Basis
+      - Calculated
+      - AggregatedComponent
+
+  DefaultPrefixComponent:
+    base: [BasePrefixComponent]
+
+  ContextPrefixComponent:
+    base: [BasePrefixComponent]
+
+  DefaultPrefixAggregate:
+    base: [BasePrefixAggregate]
+
+  ContextPrefixAggregate:
+    base: [BasePrefixAggregate]
+
+  MixedPrefixAggregate:
+    base: [BasePrefixAggregate]
+
+
+class_relationships:
+  - MetricPrefixDevice 1:MC DefaultPrefixComponent
+  - MetricPrefixDevice 1:MC ContextPrefixComponent
+  - MetricPrefixDevice 1:MC DefaultPrefixAggregate
+  - MetricPrefixDevice 1:MC ContextPrefixAggregate
+  - MetricPrefixDevice 1:MC MixedPrefixAggregate
+  - BasePrefixAggregate 1:M BasePrefixComponent
+
+
+device_classes:
+  /Test/MetricPrefix:
+    remove: true
+
+    zProperties:
+      zPythonClass: ZenPacks.test.MetricPrefix.MetricPrefixDevice
+      zCollectorPlugins:
+        - test.MetricPrefix
+
+      zDeviceTemplates:
+        - Basis
+        - Calculated
+        - AggregatedDevice
+
+    templates:
+      Basis:
+        datasources:
+          basis:
+            type: Python
+            plugin_classname: ZenPacks.test.MetricPrefix.plugins.FakeData
+            cycletime: 10
+            datapoints:
+              ten: GAUGE
+              twenty: GAUGE
+              fifty: DERIVE
+              hundred: DERIVE
+              cos10min: GAUGE
+
+        thresholds:
+          "greater than 0":
+            type: DurationThreshold
+            maxval: "0"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            dsnames:
+              - basis_ten
+              - basis_fifty
+
+          "less than 999":
+            type: DurationThreshold
+            minval: "999"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            dsnames:
+              - basis_ten
+              - basis_fifty
+
+        graphs:
+          Basis:
+            miny: 0
+            maxy: 100
+            graphpoints:
+              "10-gauge": {dpName: basis_ten}
+              "20-gauge": {dpName: basis_twenty}
+              "-0-rate-": {dpName: basis_fifty}
+              "-0-rate-": {dpName: basis_hundred}
+              "---vary-": {dpName: basis_cos10min}
+
+      Calculated:
+        datasources:
+          calcGauge:
+            type: Calculated Performance
+            expression: ten + twenty
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              calcGauge: GAUGE
+
+          calcRate:
+            type: Calculated Performance
+            expression: fifty + hundred
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              calcRate: DERIVE
+
+          calcVary:
+            type: Calculated Performance
+            expression: ten + cos10min
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              calcVary: GAUGE
+
+        graphs:
+          Calculated:
+            miny: 0
+            maxy: 100
+            graphpoints:
+              "30-gauge": {dpName: calcGauge_calcGauge}
+              "-0-rate-": {dpName: calcRate_calcRate}
+              "---vary-": {dpName: calcVary_calcVary}
+
+      AggregatedComponent:
+        datasources:
+          aggGauge:
+            type: Datapoint Aggregator
+            targetMethod: basePrefixComponents
+            targetDataSource: basis
+            targetDataPoint: ten
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+          aggRate:
+            type: Datapoint Aggregator
+            targetMethod: basePrefixComponents
+            targetDataSource: basis
+            targetDataPoint: fifty
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              sum: DERIVE
+
+          aggVary:
+            type: Datapoint Aggregator
+            targetMethod: basePrefixComponents
+            targetDataSource: basis
+            targetDataPoint: cos10min
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+        graphs:
+          Aggregated:
+            miny: 0
+            maxy: 100
+            graphpoints:
+              "20-gauge": {dpName: aggGauge_sum}
+              "-0-rate-": {dpName: aggRate_sum}
+              "---vary-": {dpName: aggVary_sum}
+
+      AggregatedDevice:
+        datasources:
+          aggDefaultPrefixGauge:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: defaultPrefixAggregates
+            targetDataSource: aggGauge
+            targetDataPoint: sum
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+          aggDefaultPrefixRate:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: contextPrefixAggregates
+            targetDataSource: aggRate
+            targetDataPoint: sum
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              sum: DERIVE
+
+          aggContextPrefixGauge:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: defaultPrefixAggregates
+            targetDataSource: aggGauge
+            targetDataPoint: sum
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+          aggContextPrefixRate:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: contextPrefixAggregates
+            targetDataSource: aggRate
+            targetDataPoint: sum
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              sum: DERIVE
+
+          aggMixedPrefixGauge:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: mixedPrefixAggregates
+            targetDataSource: aggGauge
+            targetDataPoint: sum
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+          aggMixedPrefixRate:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: mixedPrefixAggregates
+            targetDataSource: aggRate
+            targetDataPoint: sum
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              sum: DERIVE
+
+          aggMixedPrefixVary:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: mixedPrefixAggregates
+            targetDataSource: aggVary
+            targetDataPoint: sum
+            targetAsRate: true
+            cycletime: "10"
+            datapoints:
+              sum: GAUGE
+
+        graphs:
+          Aggregated:
+            miny: 0
+            maxy: 100
+            graphpoints:
+              "40-default-prefix-gauge": {dpName: aggDefaultPrefixGauge_sum}
+              "-0-default-prefix-rate-": {dpName: aggDefaultPrefixRate_sum}
+              "40-context-prefix-gauge": {dpName: aggContextPrefixGauge_sum}
+              "-0-context-prefix-rate-": {dpName: aggContextPrefixRate_sum}
+              "40---mixed-prefix-gauge": {dpName: aggMixedPrefixGauge_sum}
+              "-0---mixed-prefix-rate-": {dpName: aggMixedPrefixRate_sum}
+              "-----mixed-prefix-vary-": {dpName: aggMixedPrefixVary_sum}
