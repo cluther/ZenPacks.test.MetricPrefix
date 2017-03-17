@@ -1,4 +1,5 @@
 # stdlib Imports
+import datetime
 import math
 import time
 
@@ -32,6 +33,7 @@ class FakeData(PythonDataSourcePlugin):
                     "fifty": 50,
                     "hundred": 100,
                     "epoch": now,
+                    "pct1day": getpercentofday(),
                     "cos1min": getcos(now / 60),
                     "cos5min": getcos(now / 300),
                     "cos10min": getcos(now / 600),
@@ -42,4 +44,11 @@ class FakeData(PythonDataSourcePlugin):
 
 
 def getcos(n):
+    """Return cosine of n between 0-10 instead of 0.0 and 1.0."""
     return (math.cos(n * math.pi) * 10) + 10
+
+
+def getpercentofday():
+    """Return the percent of the way through the day (0-100)."""
+    now = datetime.datetime.now()
+    return (now.hour * 3600 + now.minute * 60 + now.second) / 864.0

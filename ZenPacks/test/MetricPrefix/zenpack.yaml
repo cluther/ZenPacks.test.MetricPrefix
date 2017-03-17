@@ -73,26 +73,62 @@ device_classes:
               twenty: GAUGE
               fifty: DERIVE
               hundred: DERIVE
+              pct1day: GAUGE
               cos10min: GAUGE
 
         thresholds:
-          "greater than 0":
+          basis-minmax-max:
+            type: MinMaxThreshold
+            maxval: "0"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - basis_ten
+              - basis_fifty
+
+          basis-minmax-min:
+            type: MinMaxThreshold
+            minval: "999"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - basis_ten
+              - basis_fifty
+
+          basis-duration-max:
             type: DurationThreshold
             maxval: "0"
             timePeriod: "1 hour"
             violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
             dsnames:
               - basis_ten
               - basis_fifty
 
-          "less than 999":
+          basis-duration-min:
             type: DurationThreshold
             minval: "999"
             timePeriod: "1 hour"
             violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
             dsnames:
               - basis_ten
               - basis_fifty
+
+          basis-predictive-max:
+            type: PredictiveThreshold
+            maxval: "100"
+            pastData: 1
+            pastDataUnits: days
+            amountToPredict: 7
+            amountToPredictUnits: days
+            evaluationFrequency: 60
+            eventClass: /Test/Threshold
+            severity: Error
+            dsnames:
+              - basis_pct1day
 
         graphs:
           Basis:
@@ -104,6 +140,9 @@ device_classes:
               "-0-rate-": {dpName: basis_fifty}
               "-0-rate-": {dpName: basis_hundred}
               "---vary-": {dpName: basis_cos10min}
+              "---pct--":
+                dpName: basis_pct1day
+                includeThresholds: true
 
       Calculated:
         datasources:
@@ -131,6 +170,68 @@ device_classes:
             datapoints:
               calcVary: GAUGE
 
+          calcPct:
+            type: Calculated Performance
+            expression: ten + pct1day - 10
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              calcPct: GAUGE
+
+        thresholds:
+          calculated-minmax-max:
+            type: MinMaxThreshold
+            maxval: "0"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - calcGauge_calcGauge
+              - calcRate_calcRate
+
+          calculated-minmax-min:
+            type: MinMaxThreshold
+            minval: "999"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - calcGauge_calcGauge
+              - calcRate_calcRate
+
+          calculated-duration-max:
+            type: DurationThreshold
+            maxval: "0"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - calcGauge_calcGauge
+              - calcRate_calcRate
+
+          calculated-duration-min:
+            type: DurationThreshold
+            minval: "999"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - calcGauge_calcGauge
+              - calcRate_calcRate
+
+          calculated-predictive-max:
+            type: PredictiveThreshold
+            maxval: "100"
+            pastData: 1
+            pastDataUnits: days
+            amountToPredict: 7
+            amountToPredictUnits: days
+            evaluationFrequency: 60
+            eventClass: /Test/Threshold
+            severity: Error
+            dsnames:
+              - calcPct_calcPct
+
         graphs:
           Calculated:
             miny: 0
@@ -139,6 +240,9 @@ device_classes:
               "30-gauge": {dpName: calcGauge_calcGauge}
               "-0-rate-": {dpName: calcRate_calcRate}
               "---vary-": {dpName: calcVary_calcVary}
+              "---pct--":
+                dpName: calcPct_calcPct
+                includeThresholds: true
 
       AggregatedComponent:
         datasources:
@@ -172,6 +276,72 @@ device_classes:
             datapoints:
               sum: GAUGE
 
+          aggPct:
+            type: Datapoint Aggregator
+            targetMethod: basePrefixComponents
+            targetDataSource: basis
+            targetDataPoint: pct1day
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              avg:
+                rrdtype: GAUGE
+                operation: avg
+
+        thresholds:
+          aggregated-minmax-max:
+            type: MinMaxThreshold
+            maxval: "0"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - aggGauge_sum
+              - aggRate_sum
+
+          aggregated-minmax-min:
+            type: MinMaxThreshold
+            minval: "999"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - aggGauge_sum
+              - aggRate_sum
+
+          aggregated-duration-max:
+            type: DurationThreshold
+            maxval: "0"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - aggGauge_sum
+              - aggRate_sum
+
+          aggregated-duration-min:
+            type: DurationThreshold
+            minval: "999"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - aggGauge_sum
+              - aggRate_sum
+
+          aggregated-predictive-max:
+            type: PredictiveThreshold
+            maxval: "100"
+            pastData: 1
+            pastDataUnits: days
+            amountToPredict: 7
+            amountToPredictUnits: days
+            evaluationFrequency: 60
+            eventClass: /Test/Threshold
+            severity: Error
+            dsnames:
+              - aggPct_avg
+
         graphs:
           Aggregated:
             miny: 0
@@ -180,6 +350,9 @@ device_classes:
               "20-gauge": {dpName: aggGauge_sum}
               "-0-rate-": {dpName: aggRate_sum}
               "---vary-": {dpName: aggVary_sum}
+              "---pct--":
+                dpName: aggPct_avg
+                includeThresholds: true
 
       AggregatedDevice:
         datasources:
@@ -255,10 +428,93 @@ device_classes:
             targetMethod: mixedPrefixAggregates
             targetDataSource: aggVary
             targetDataPoint: sum
-            targetAsRate: true
+            targetAsRate: false
             cycletime: "10"
             datapoints:
               sum: GAUGE
+
+          aggMixedPrefixPct:
+            type: Datapoint Aggregator
+            component: ''
+            targetMethod: mixedPrefixAggregates
+            targetDataSource: aggPct
+            targetDataPoint: avg
+            targetAsRate: false
+            cycletime: "10"
+            datapoints:
+              avg:
+                rrdtype: GAUGE
+                operation: avg
+
+        thresholds:
+          aggregated-device-minmax-max:
+            type: MinMaxThreshold
+            maxval: "0"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - aggDefaultPrefixGauge_sum
+              - aggDefaultPrefixRate_sum
+              - aggContextPrefixGauge_sum
+              - aggContextPrefixRate_sum
+              - aggMixedPrefixGauge_sum
+              - aggMixedPrefixRate_sum
+
+          aggregated-device-minmax-min:
+            type: MinMaxThreshold
+            minval: "999"
+            eventClass: /Test/MinMax
+            severity: Info
+            dsnames:
+              - aggDefaultPrefixGauge_sum
+              - aggDefaultPrefixRate_sum
+              - aggContextPrefixGauge_sum
+              - aggContextPrefixRate_sum
+              - aggMixedPrefixGauge_sum
+              - aggMixedPrefixRate_sum
+
+          aggregated-device-duration-max:
+            type: DurationThreshold
+            maxval: "0"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - aggDefaultPrefixGauge_sum
+              - aggDefaultPrefixRate_sum
+              - aggContextPrefixGauge_sum
+              - aggContextPrefixRate_sum
+              - aggMixedPrefixGauge_sum
+              - aggMixedPrefixRate_sum
+
+          aggregated-device-duration-min:
+            type: DurationThreshold
+            minval: "999"
+            timePeriod: "1 hour"
+            violationPercentage: 1
+            eventClass: /Test/Duration
+            severity: Warning
+            dsnames:
+              - aggDefaultPrefixGauge_sum
+              - aggDefaultPrefixRate_sum
+              - aggContextPrefixGauge_sum
+              - aggContextPrefixRate_sum
+              - aggMixedPrefixGauge_sum
+              - aggMixedPrefixRate_sum
+
+          aggregated-device-predictive-max:
+            type: PredictiveThreshold
+            maxval: "110"
+            pastData: 1
+            pastDataUnits: days
+            amountToPredict: 7
+            amountToPredictUnits: days
+            evaluationFrequency: 60
+            eventClass: /Test/Threshold
+            severity: Error
+            dsnames:
+              - aggMixedPrefixPct_avg
 
         graphs:
           Aggregated:
@@ -272,3 +528,17 @@ device_classes:
               "40---mixed-prefix-gauge": {dpName: aggMixedPrefixGauge_sum}
               "-0---mixed-prefix-rate-": {dpName: aggMixedPrefixRate_sum}
               "-----mixed-prefix-vary-": {dpName: aggMixedPrefixVary_sum}
+              "-----mixed-prefix-pct--":
+                dpName: aggMixedPrefixPct_avg
+                includeThresholds: true
+
+
+event_classes:
+  /Test/MinMax:
+    remove: true
+
+  /Test/Duration:
+    remove: true
+
+  /Test/Predictive:
+    remove: true
