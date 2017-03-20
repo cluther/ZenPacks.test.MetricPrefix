@@ -117,19 +117,6 @@ device_classes:
               - basis_ten
               - basis_fifty
 
-          basis-predictive-max:
-            type: PredictiveThreshold
-            maxval: "100"
-            pastData: 1
-            pastDataUnits: days
-            amountToPredict: 7
-            amountToPredictUnits: days
-            evaluationFrequency: 60
-            eventClass: /Test/Threshold
-            severity: Error
-            dsnames:
-              - basis_pct1day
-
         graphs:
           Basis:
             miny: 0
@@ -218,19 +205,6 @@ device_classes:
             dsnames:
               - calcGauge_calcGauge
               - calcRate_calcRate
-
-          calculated-predictive-max:
-            type: PredictiveThreshold
-            maxval: "100"
-            pastData: 1
-            pastDataUnits: days
-            amountToPredict: 7
-            amountToPredictUnits: days
-            evaluationFrequency: 60
-            eventClass: /Test/Threshold
-            severity: Error
-            dsnames:
-              - calcPct_calcPct
 
         graphs:
           Calculated:
@@ -328,19 +302,6 @@ device_classes:
             dsnames:
               - aggGauge_sum
               - aggRate_sum
-
-          aggregated-predictive-max:
-            type: PredictiveThreshold
-            maxval: "100"
-            pastData: 1
-            pastDataUnits: days
-            amountToPredict: 7
-            amountToPredictUnits: days
-            evaluationFrequency: 60
-            eventClass: /Test/Threshold
-            severity: Error
-            dsnames:
-              - aggPct_avg
 
         graphs:
           Aggregated:
@@ -503,19 +464,6 @@ device_classes:
               - aggMixedPrefixGauge_sum
               - aggMixedPrefixRate_sum
 
-          aggregated-device-predictive-max:
-            type: PredictiveThreshold
-            maxval: "110"
-            pastData: 1
-            pastDataUnits: days
-            amountToPredict: 7
-            amountToPredictUnits: days
-            evaluationFrequency: 60
-            eventClass: /Test/Threshold
-            severity: Error
-            dsnames:
-              - aggMixedPrefixPct_avg
-
         graphs:
           Aggregated:
             miny: 0
@@ -538,7 +486,4 @@ event_classes:
     remove: true
 
   /Test/Duration:
-    remove: true
-
-  /Test/Predictive:
     remove: true

@@ -13,7 +13,6 @@ INSTALL_REQUIRES = [
     'ZenPacks.zenoss.PythonCollector',
     'ZenPacks.zenoss.CalculatedPerformance',
     'ZenPacks.zenoss.DurationThreshold',
-    'ZenPacks.zenoss.PredictiveThreshold',
 ]
 COMPAT_ZENOSS_VERS = ""
 PREV_ZENPACK_NAME = ""
